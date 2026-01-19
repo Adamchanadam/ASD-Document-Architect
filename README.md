@@ -3,7 +3,7 @@
 > **Agent-Skill Driven Single Source of Truth (ASD-SSOT)**
 > 專為 LLM 長文本檢索設計的高效、零幻覺、結構化封裝系統。
 
-![Version](https://img.shields.io/badge/Version-v1.5.2-blue.svg) ![Language](https://img.shields.io/badge/Language-Traditional%20Chinese-green.svg) ![License](https://img.shields.io/badge/License-MIT-orange.svg)
+![Version](https://img.shields.io/badge/Version-v1.5.3-blue.svg) ![Language](https://img.shields.io/badge/Language-Traditional%20Chinese-green.svg) ![License](https://img.shields.io/badge/License-MIT-orange.svg)
 
 ## 📖 專案簡介
 
@@ -18,7 +18,7 @@
 * **零幻覺封裝 (Zero Hallucination)**：嚴格執行「封裝而非摘要」協議，確保輸出的 Markdown 內容與原文 100% 字元級一致。
 * **智能路由機制 (Smart Routing)**：自動生成 `Trigger Context`（觸發語境），讓下游 AI 僅在必要時讀取特定模塊，極大節省 Token。
 * **結構化錨點 (Structured Anchors)**：使用 `## [MODULE X]` 作為硬性錨點，解決 LLM 在長文中定位錯誤的問題。
-* **容量自適應 (Adaptive Volume)**：內建 20,000 Token 閾值檢測，自動決定採用「單檔整合」或「物理分拆」策略。
+* **容量自適應 (Adaptive Volume)**：內建 20,000 Token 閾值檢測，自動決定採用「單檔整合」或「物理分拆」策略。**(v1.5.3 新增：分拆模式支援無縫拼接，Part 1 內建全域索引。)**
 * **下游 AI 友善 (Downstream Friendly)**：生成的文檔內嵌「解碼指令」，無需額外配置即可被 RAG 系統或 Agent 精準讀取。
 
 ### 🚀 v1.5.2 (Safe-Separator Edition) 核心更新
@@ -29,16 +29,16 @@
 
 ## 🌟 核心原理 (Core Principles)
 
-1.  **原文神聖性 (Content Fidelity)**
-    * **封裝而非摘要**：嚴禁改寫或縮減內容。所有的 URL、表格、數據、代碼塊均保持 100% 字元級一致。
-    * **完整性檢查**：內建六大檢查機制，確保輸出內容行數不減反增。
+1.  **原文神聖性 (Content Fidelity)**
+    * **封裝而非摘要**：嚴禁改寫或縮減內容。所有的 URL、表格、數據、代碼塊均保持 100% 字元級一致。
+    * **完整性檢查**：內建六大檢查機制，確保輸出內容行數不減反增。
 
-2.  **路由與酬載分離 (Router-Payload Separation)**
-    * **L1 Index (Router)**：輕量級索引，僅包含「技能名稱」與「觸發條件」。
-    * **L2 Module (Payload)**：實際內容被封裝在獨立模塊中，只有在 Trigger 匹配時才被讀取。
+2.  **路由與酬載分離 (Router-Payload Separation)**
+    * **L1 Index (Router)**：輕量級索引，僅包含「技能名稱」與「觸發條件」。
+    * **L2 Module (Payload)**：實際內容被封裝在獨立模塊中，只有在 Trigger 匹配時才被讀取。
 
-3.  **觸發優先 (Trigger First)**
-    * 每個模塊均附帶 `Trigger Context`（例如：「當用戶詢問 Q4 財報數據時...」），引導下游 AI 進行非線性跳轉閱讀。
+3.  **觸發優先 (Trigger First)**
+    * 每個模塊均附帶 `Trigger Context`（例如：「當用戶詢問 Q4 財報數據時...」），引導下游 AI 進行非線性跳轉閱讀。
 
 ---
 
@@ -46,8 +46,8 @@
 
 ### 1. 安裝 (Installation)
 本工具無需安裝代碼庫，僅需導入 Prompt。
-1.  進入 `prompts/` 資料夾（或查看本倉庫源碼）。
-2.  複製 `prompt_ASD_Document_Architect.md` 的完整內容。
+1.  進入 `prompts/` 資料夾（或查看本倉庫源碼）。
+2.  複製 `prompt_ASD_Document_Architect.md` 的完整內容。
 
 ### 2. 啟動 (Initialization)
 在 ChatGPT (GPT-5) 或 Claude (Sonnet 4.5) 或 Gemini (3.0 Pro) 中開啟 **New Chat**，貼上 Prompt 並發送。
@@ -118,6 +118,7 @@ last_updated: 2026-01-18
 ========== [MODULE SEPARATOR] ==========
 ---
 
+
 ```
 
 ---
@@ -136,25 +137,27 @@ last_updated: 2026-01-18
 在回答用戶問題時，嚴格遵守以下「跳躍式讀取」流程：
 
 1. **Step 1: 索引路由 (Index Routing)**
-   * 讀取文檔頂部的 `> META-INDEX`。
-   * 根據用戶 Query 關鍵詞，匹配最相關的 `Module ID` 或 `Description`。
-   * *Critical*: 若 Query 涉及多個面向（如「營收與估值關係」），請規劃讀取多個 Module (e.g., Mod 2 + Mod 4)。
+   * 讀取文檔頂部的 `> META-INDEX`。
+   * 根據用戶 Query 關鍵詞，匹配最相關的 `Module ID` 或 `Description`。
+   * *Critical*: 若 Query 涉及多個面向（如「營收與估值關係」），請規劃讀取多個 Module (e.g., Mod 2 + Mod 4)。
 
 2. **Step 2: 精確跳轉 (Precision Jump)**
-   * 直接搜索標題錨點 `## [MODULE X]`。
-   * **忽略** 所有非目標 Module 的內容以節省注意力資源。
+   * 直接搜索標題錨點 `## [MODULE X]`。
+   * **忽略** 所有非目標 Module 的內容以節省注意力資源。
 
 3. **Step 3: 驗證與提取 (Verify & Fetch)**
-   * 檢查該 Module 的 `Trigger Context`。
-   * 僅從 `[Data Payload]` 區塊中提取資訊。
+   * 檢查該 Module 的 `Trigger Context`。
+   * 僅從 `[Data Payload]` 區塊中提取資訊。
 
-4. **Step 4: 誠實回答 (Honest Response)**
-   * **引用規則**：回答必須基於提取的原文，並標註 `[Source: PDF P.XX]`。
-   * **Fallback**：如果所有 Module 的 Trigger 都不匹配，或 Data Payload 中沒有答案，請直接回答：「ASD 知識庫中未包含此具體資訊（Out of Scope）。」**嚴禁編造數據。**
+4. **Step 4: 回答生成與降級 (Response & Fallback)**
+   * **引用規則**：回答必須基於提取的原文，並標註 `[Source: PDF P.XX]`。
+   * **Fallback**：如果所有 Module 的 Trigger 都不匹配，或 Data Payload 中沒有答案，請直接回答：「ASD 知識庫中未包含此具體資訊（Out of Scope）。」**嚴禁編造數據。**
 
 **Input Context**:
 用戶將提供一個 ASD 格式的 Markdown 檔案。
+
 ```
+
 ---
 
 ## ⚠️ 操作守則 (Operational Rules)
@@ -176,5 +179,5 @@ last_updated: 2026-01-18
 
 **ASD Architect** - *Turning Documents into Agent Skills.*
 
-```
+
 
