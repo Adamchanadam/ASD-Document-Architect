@@ -21,9 +21,10 @@
 * **容量自適應 (Adaptive Volume)**：內建 20,000 Token 閾值檢測，自動決定採用「單檔整合」或「物理分拆」策略。**(v1.5.3 新增：分拆模式支援無縫拼接，Part 1 內建全域索引。)**
 * **下游 AI 友善 (Downstream Friendly)**：生成的文檔內嵌「解碼指令」，無需額外配置即可被 RAG 系統或 Agent 精準讀取。
 
-### 🚀 v1.5.2 (Safe-Separator Edition) 核心更新
-* **純文本硬分隔符**：採用 `========== [MODULE SEPARATOR] ==========` 替代 HTML 註解，確保在所有 Markdown 渲染引擎與 LLM 預覽中，模塊邊界絕對可見。
-* **錨點導航 (Anchor Navigation)**：使用標題錨點取代行數定位，徹底消除 LLM 的行數幻覺問題。
+### 🚀 v1.5.3 (Seamless Stitching Edition) 核心更新
+* **無縫拼接 (Seamless Stitching)**：物理分拆模式下，Part 2 及後續分卷自動去除重複標頭，支援直接 Copy-Paste 完美還原為單一文檔。
+* **全域索引 (Global Master Index)**：Part 1 預先生成涵蓋所有分卷 (Part 1-N) 的完整索引，解決分卷檢索時的「視野盲區」問題。
+* **防幻覺降級 (Fallback Protocol)**：下游解碼器新增 Step 4 檢測機制，當無資料匹配時強制回報 Out of Scope，嚴禁編造數據。
 
 ---
 
@@ -70,11 +71,13 @@
 * **AI 行為**：AI 評估容量後，自動採用 **「整合式結構 (Consolidated Structure)」**。
 * **結果**：輸出一個單一的 `.md` 檔，內部包含多個由 `[MODULE SEPARATOR]` 分隔的區塊，並附帶 Meta-Index 索引，方便下游 AI 一次性讀取與跳轉。
 
-**🔵 案例 C：建立知識庫索引 (Index) —— [Mode B: 索引構建]**
-* **場景**：您手邊已經有 5 個處理好的 ASD 模塊檔（如 `finance.md`, `hr_policy.md`, `tech_specs.md`）。
-* **操作**：一次性將這 5 個檔案（或內容）貼給 AI，輸入指令「請建立 Master Index」。
-* **AI 行為**：AI 讀取每個模塊的 `Trigger Context`。
-* **結果**：生成一個輕量級的 `Master_Index.md`。未來您只需將此索引檔發送給 AI，它就能知道該去哪個檔案找答案，無需每次加載所有文檔。
+**🔵 案例 C：處理超長文檔或建立知識庫 —— [Mode B: 無縫分拆]**
+* **場景**：總內容 > 20,000 Tokens (如技術手冊、法規全文)。
+* **操作**：AI 自動啟動分拆模式。
+* **AI 行為**：
+    * **Part 1**：輸出全域索引及前段內容。
+    * **Part 2+**：僅輸出後續模塊內容 (無標頭)。
+* **結果**：您只需將各 Part 依序複製貼上，即可組合成一個完整的 ASD-SSOT 檔案，無需手動修復格式。
 
 ---
 
@@ -151,7 +154,7 @@ last_updated: 2026-01-18
 
 4. **Step 4: 回答生成與降級 (Response & Fallback)**
    * **引用規則**：回答必須基於提取的原文，並標註 `[Source: PDF P.XX]`。
-   * **Fallback**：如果所有 Module 的 Trigger 都不匹配，或 Data Payload 中沒有答案，請直接回答：「ASD 知識庫中未包含此具體資訊（Out of Scope）。」**嚴禁編造數據。**
+   * **Fallback (v1.5.3)**：如果所有 Module 的 Trigger 都不匹配，請直接回答：「ASD 知識庫中未包含此具體資訊（Out of Scope）。」**嚴禁編造數據。**
 
 **Input Context**:
 用戶將提供一個 ASD 格式的 Markdown 檔案。
@@ -178,6 +181,3 @@ last_updated: 2026-01-18
 ---
 
 **ASD Architect** - *Turning Documents into Agent Skills.*
-
-
-
