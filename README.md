@@ -47,7 +47,7 @@
 
 ### 1. 安裝 (Installation)
 本工具無需安裝代碼庫，僅需導入 Prompt。
-1.  進入 `prompts/` 資料夾（或查看本倉庫源碼）。
+1.  查看本倉庫源碼（根目錄）。
 2.  複製 `prompt_ASD_Document_Architect.md` 的完整內容。
 
 ### 2. 啟動 (Initialization)
@@ -62,7 +62,7 @@
 **🟢 案例 A：處理 100 頁的公司年報 (PDF) —— [Mode A: 範圍界定]**
 * **場景**：檔案巨大，無法一次讀完。
 * **操作**：直接上傳 PDF。
-* **AI 行為**：AI 不會硬讀全文，而是先掃描前 20 頁目錄，列出章節（如：財務摘要、ESG 報告、管理層討論...），詢問您要提取哪部分。
+* **AI 行為**：AI 不會硬讀全文，而是先掃描前 20 頁目錄，列出章節目錄（如：財務摘要、ESG 報告、管理層討論...），詢問您要提取哪部分。
 * **結果**：您指定「財務摘要」後，AI 僅提取該部分並封裝為 ASD 模塊。
 
 **🟢 案例 B：處理 10,000 中文字資料 (Markdown) —— [Mode A: 單檔整合]**
@@ -128,38 +128,14 @@ last_updated: 2026-01-18
 
 ## 🤖 下游 AI 整合 (Downstream Integration)
 
-要讓其他 AI (如 RAG 系統或另一個 Chat session) 高效讀取 ASD 文檔，建議在傳送 ASD 檔案前，先發送以下 **Decoder Prompt**。這將強制 AI 採用「跳躍式讀取」而非「線性閱讀」，最大化 Token 效率。
+要讓其他 AI (如 RAG 系統或另一個 Chat session) 高效讀取 ASD 文檔，建議在傳送 ASD 檔案前，先使用本倉庫的 **Decoder Prompt（唯一 SSOT）**：
 
-```markdown
-# System Prompt: ASD-SSOT Decoder (ASD 智能解碼器)
+- **Decoder Prompt**：[`prompt_ASD Decoder.md`](./prompt_ASD%20Decoder.md)
 
-**Role Definition**:
-你是一個專門讀取 **ASD-SSOT (Agent-Skill Driven)** 格式文檔的智能閱讀器。
-
-**PROTOCOL (讀取協議)**:
-在回答用戶問題時，嚴格遵守以下「跳躍式讀取」流程：
-
-1. **Step 1: 索引路由 (Index Routing)**
-   * 讀取文檔頂部的 `> META-INDEX`。
-   * 根據用戶 Query 關鍵詞，匹配最相關的 `Module ID` 或 `Description`。
-   * *Critical*: 若 Query 涉及多個面向（如「營收與估值關係」），請規劃讀取多個 Module (e.g., Mod 2 + Mod 4)。
-
-2. **Step 2: 精確跳轉 (Precision Jump)**
-   * 直接搜索標題錨點 `## [MODULE X]`。
-   * **忽略** 所有非目標 Module 的內容以節省注意力資源。
-
-3. **Step 3: 驗證與提取 (Verify & Fetch)**
-   * 檢查該 Module 的 `Trigger Context`。
-   * 僅從 `[Data Payload]` 區塊中提取資訊。
-
-4. **Step 4: 回答生成與降級 (Response & Fallback)**
-   * **引用規則**：回答必須基於提取的原文，並標註 `[Source: PDF P.XX]`。
-   * **Fallback (v1.5.3)**：如果所有 Module 的 Trigger 都不匹配，請直接回答：「ASD 知識庫中未包含此具體資訊（Out of Scope）。」**嚴禁編造數據。**
-
-**Input Context**:
-用戶將提供一個 ASD 格式的 Markdown 檔案。
-
-```
+**建議流程**：
+1. 先在新對話中貼上 Decoder Prompt。
+2. 再提供由 `prompt_ASD_Document_Architect.md` 生成的 ASD-SSOT 文檔（單檔或 Part 1-N）。
+3. 最後提出問題，Decoder 會根據 `> META-INDEX` 與 `## [MODULE X]` 進行結構化跳轉讀取並嚴格引用。
 
 ---
 
