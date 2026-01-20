@@ -1,9 +1,9 @@
 # ASD 智能文檔架構師 (ASD Document Architect)
 
 > **Agent-Skill Driven Single Source of Truth (ASD-SSOT)**
-> 專為 LLM 長文本檢索設計的高效、零幻覺、結構化封裝系統。
+> 專為 LLM 長文本檢索設計的高效、低幻覺風險、結構化封裝系統。
 
-![Version](https://img.shields.io/badge/Version-v1.6.0-blue.svg) ![Language](https://img.shields.io/badge/Language-Traditional%20Chinese-green.svg) ![License](https://img.shields.io/badge/License-MIT-orange.svg)
+![Version](https://img.shields.io/badge/Version-v1.6.2-blue.svg) ![Language](https://img.shields.io/badge/Language-Traditional%20Chinese-green.svg) ![License](https://img.shields.io/badge/License-MIT-orange.svg)
 
 ## 📖 專案簡介
 
@@ -22,14 +22,18 @@ ASD 不做摘要（Summarization），而是把非結構化文檔封裝為具備
 
 ## 💎 關鍵功能 (Key Features)
 
-* **絕對全量協議 (Absolute Full-Text Protocol)**：嚴格執行「封裝而非摘要」協議，一旦頁碼範圍鎖定，強制進入「隧道視野」模式，確保輸出的 Markdown 內容與原文 100% 字元級一致，拒絕採摘式刪減。
-* **無限長度物理分拆 (Physical Splitting)**：內建 20,000 Token 閾值檢測，對於超長文檔自動輸出 `Part 1` (含 Index) + `Part N` (Body) 的分卷結構，並支援無頭續章的無縫拼接。
-* **雙層頁碼錨定 (Dual-Layer Anchoring)**：解決 PDF 物理頁碼與印刷頁碼不一致的痛點，強制標註 `PDF_Index` (檔案座標) 與 `Print_Label` (業務座標)，徹底消除溯源歧義。
-* **精細化語意路由 (Granular Semantic Routing)**：引入實體級清單與場景化觸發機制，預判用戶意圖 (如 "Why did...", "What is the specific value of...")，實現「手術刀級」的數據定位。
-* **實體級清單 (Entity-Level Inventory)**：在元數據中強制提取關鍵人名、地名、專案代號及數據指標，解決傳統 RAG 系統對細節內容「漏召回」的問題。
-* **下游 AI 友善 (Downstream Friendly)**：生成的文檔內嵌標準化「解碼指令」與 `Meta-Index`，無需額外配置即可被 RAG 系統或 Agent 精準讀取。
+* **絕對全量協議 (Absolute Full-Text Protocol)**：嚴格執行「封裝而非摘要」協議。一旦頁碼範圍鎖定，輸出的 Markdown 內容必須與原文 100% 字元級一致，拒絕採摘式刪減。
+* **Preflight（Fail-Fast + Safe Scope Cap）**：在進入 Sizing Worksheet 前先做 **Access Probe**（探測是否能讀到 PDF 中段文字層／內文）。若探測失敗，立即切換 **Text-Paste**，並先計算「單批可安全貼上」的頁數上限（Safe Scope Cap），避免「先算一大堆 Parts 才發現讀不到內容」。
+* **容量估算與分卷規劃 (Sizing Worksheet)**：按頁數與密度分級完成保守雙界估算，輸出 `parts_min–parts_max`（含假設與算式）；禁止憑印象估計 Part 數量，寧可分拆多份也不可壓縮內容。
+* **分卷上限 presets（按平台切換｜3 檔 preset）**：`PRESET_GEMINI: 50000`；`PRESET_CLAUDE: 50000`；`PRESET_CHATGPT: 13000（不建議；僅作兼容／緊急用途）`。
+* **無限長度物理分拆 (Physical Splitting)**：當內容超出單次輸出安全上限時，自動分卷輸出 `Part 1`（含全域導航與 Master Meta-Index）及後續 `Part N`（Body）。每個 Part 必須以**單一** ```markdown 代碼塊封裝，並在結尾以三行分隔符收束（`---`、`========== [MODULE SEPARATOR] ==========`、`---`），以支援 Copy-Paste 無縫拼接；新增模塊僅用 `> META-INDEX UPDATE:` 追加增量索引。
+* **雙層頁碼錨定 (Dual-Layer Anchoring)**：強制標註 `PDF_Index`（檔案座標）與 `Print_Label`（引用座標；如無則 `N/A`）。`PDF_Index` 必須取自 PDF 閱讀器／工具顯示的絕對頁序；不得從正文推斷或以 `Print_Label` 代填。
+* **精細化語意路由 (Granular Semantic Routing)**：以實體級清單與場景化疑問句 Trigger，實現「先路由、後讀取」的精準定位。
+* **實體級清單 (Entity-Level Inventory)**：在元數據中強制提取關鍵人名、地名、公司名、專案代號及數據指標，降低漏召回風險。
+* **下游 AI 友善 (Downstream Friendly)**：文檔內嵌標準化解碼指令與索引；解碼器先讀 `> META-INDEX` 並合併 `> META-INDEX UPDATE:`，再以模塊錨點精準跳轉。
 
 ---
+
 
 ## 🌟 核心原理 (Core Principles)
 
@@ -48,7 +52,12 @@ ASD 不做摘要（Summarization），而是把非結構化文檔封裝為具備
 ---
 ## 🛠️ 使用方法 (Usage)
 
-> **目標**：先用 **ASD Document Architect** 把原文「封裝而非摘要」成可路由的 **ASD-SSOT**；再用 **ASD-SSOT Decoder** 先掃描 `> META-INDEX`，命中模組後精準跳轉並嚴格引用。
+> **目標**：先用 **ASD Document Architect** 把原文「封裝而非摘要」成可路由的 **ASD-SSOT**；再用 **ASD-SSOT Decoder** 先掃描 `> META-INDEX`（並合併 `> META-INDEX UPDATE:`），命中模組後精準跳轉並嚴格引用。
+
+**平台建議（先讀）**：
+* **建議平台**：優先使用支援較高單次輸出上限的平台（例如 Gemini／Claude），以降低 Parts 數量並減少跨頁表格截斷風險。
+* **不建議 ChatGPT**：單次輸出上限偏低，會令 Parts 數暴增並提高結構損壞風險；若仍需使用，務必縮小頁碼範圍並採用更保守的分卷上限。
+* **part_budget presets（3 檔 preset）**：`PRESET_GEMINI: 50000`；`PRESET_CLAUDE: 50000`；`PRESET_CHATGPT: 13000（不建議；僅作兼容／緊急用途）`。
 
 ### 1. 準備（一次性）
 本工具無需安裝代碼庫；只需準備兩份 Prompt 與一份原文：
@@ -61,9 +70,10 @@ ASD 不做摘要（Summarization），而是把非結構化文檔封裝為具備
 1. 在任一 LLM 平台開啟 **New Chat**（建議使用獨立對話，避免混入其他上下文）。
 2. 貼上 `prompt_ASD_Document_Architect.md` 全文並發送。
 3. 上傳原文檔案，按 Architect 提示執行並取得輸出：
-    * **Mode A（整合式）**：文檔規模可於單次上下文內處理（通常 < 20k tokens）；輸出為單一整合檔，模組以 `[MODULE SEPARATOR]` 分隔。
-    * **Mode B（分拆式）**：文檔超長或要建立知識庫；輸出會分成多個 Part（可依序 Copy-Paste 無縫拼接，或直接提供給支援分卷的 Decoder）。
-4. 將輸出保存為一份完整的 `*_ASD-SSOT.md`（Mode B 則保存為多個 Part 檔案）。
+    * **MODE A（原始長文轉模塊）**：把原文封裝為可路由 ASD-SSOT；輸出可能是單檔整合或多 Part 物理分拆（由容量與分卷上限自動判斷）。
+    * **MODE B（構建技能索引）**：在已保存多份 ASD-SSOT 檔案後，生成 Master Knowledge Index；必須先提供 **FILE MANIFEST（檔名清單）** 及 **SOURCE INPUT（全文或至少 `> META-INDEX` + `Trigger Context` 區段）**，否則 Fail-Closed。
+4. 將輸出保存為 `*_ASD-SSOT.md`；如為物理分拆，保存為多個 `_PartN.md` 檔案。MODE B 的索引輸出則另存為獨立的 Index Markdown 檔。
+
 
 ### 3. Step B — 以 Decoder 問答（先索引、後跳轉、再引用）
 1. 另開一個 **New Chat**（建議與 Architect 分開，確保解碼器只以 ASD-SSOT 為唯一資料源）。
@@ -72,16 +82,18 @@ ASD 不做摘要（Summarization），而是把非結構化文檔封裝為具備
 4. 提出問題；Decoder 會先掃描 `> META-INDEX`，再跳轉至命中模組，並在回答中提供引用（例如 `[Source: PDF_Index | Print_Label]`）。
 
 ### 4. 新手提示（Troubleshooting）
-* **回答未先掃描索引**：在同一對話要求 Decoder 重新執行「先掃描 `> META-INDEX` → 命中模組 → 只用該模組 `Data Payload` 回答」。
-* **內容過長**：用 Mode B；Decoder v1.2.0 已支援讀取無頭的分拆續章。
-* **PDF 有兩套頁碼**：請確保封裝輸出同時包含 `PDF_Index` 與 `Print_Label`，以免溯源歧義。
+* **回答未先掃描索引**：在同一對話要求 Decoder 重新執行「先掃描 `> META-INDEX`（如有 `> META-INDEX UPDATE:` 必須先合併）→ 命中模組 → 只用該模組 `Data Payload` 回答」。
+* **先算大量 Parts 才發現讀不到 PDF 中段**：要求 Architect 先做 Preflight 的 **Access Probe**；如回報 `ACCESS=RESTRICTED`，立即改用 Text-Paste，並按 Safe Scope Cap 分批貼上。
+* **輸出出現省略／佔位符**：屬 Fail-Closed；必須縮小頁碼範圍或增加物理分拆，重建 해당 Module／Part；不得以推測補足。
+* **PDF 有兩套頁碼**：`PDF_Index` 必須取自 PDF 閱讀器／工具顯示的絕對頁序；`Print_Label` 取自紙面印刷頁碼（無則 `N/A`）。如為 Text-Paste 且無法可靠取得 `PDF_Index`，則以 `N/A` 原樣標示。
+
 
 ---
 
 
 ## 📂 輸出格式範例 (Output Structure)
 
-ASD v1.6.0 生成的文檔具備 **自解釋性** 與 **高顆粒度**，包含給下游 AI 的精細化指令：
+ASD 生成的文檔具備 **自解釋性** 與 **高顆粒度**，包含給下游 AI 的精細化指令：
 
 ```markdown
 # [ROOT] 2025 全球局勢報告 (Consolidated)
@@ -90,7 +102,7 @@ ASD v1.6.0 生成的文檔具備 **自解釋性** 與 **高顆粒度**，包含�
 > This file contains multiple logical modules.
 > 1. Do NOT read linearly. Scan the [META-INDEX] below.
 > 2. Find the target module by searching for the exact header: `## [MODULE X]`.
-> ...
+> 3. Only load the specific [MODULE] payload when User Query matches the `Trigger Context`.
 
 > **META-INDEX**:
 > - Module 1: `trade_data_2025` (Anchor: [MODULE 1])
@@ -119,14 +131,13 @@ last_updated: 2026-01-20
 > - "What is the specific trade surplus value in 2025 Q1?"
 > - "List the amendments to Section 301."
 
-(此處為 100% 盲目轉錄的原文內容，保留所有表格與附註...)
+(此處為 100% 盲目轉錄的原文內容，保留所有表格與附註。)
 
 [Source: PDF_Index P.12 | Print_Label P.8]
 
 ---
 ========== [MODULE SEPARATOR] ==========
 ---
-
 
 ```
 
@@ -152,14 +163,21 @@ last_updated: 2026-01-20
 
 系統在輸出前會強制執行 **8 項完整性檢查**，包含：
 
-1. **頁碼錨定 (Anchoring)**：嚴格執行 `PDF_Index` 與 `Print_Label` 雙重標註。
-2. **完整性**：URL、表格是否跑版？
-3. **行數驗證**：新輸出的行數必須 > 原文行數。
-4. **格式保護**：JSON/YAML/Code Block 必須保留語法。
-5. **禁止佔位符**：嚴禁出現 `(...)` 或 `[同上]`。
-6. **元數據顆粒度**：Description 必須包含實體清單，Trigger 必須是疑問句。
-7. **語言一致性**：對話用繁體中文，但 Data Payload 內**原文語言不可變更**。
-8. **Initialization**：啟動後必須宣告版本號與支援能力（如零損耗提取、無縫拼接）。
+1. **頁碼錨定 (Dual-Layer Anchoring)**：
+   * `PDF_Index` 必須取自 PDF 閱讀器／工具顯示的絕對頁序；不得從正文推斷或以 `Print_Label` 代填。
+   * `Print_Label` 取自紙面印刷頁碼；無法可靠識別則填 `N/A`。
+2. **完整性 (Completeness)**：URL、表格、代碼塊是否完整且未跑版？每個 Module 是否包含引用行與分隔符？
+3. **行數驗證（禁用）**：禁止以「行數比較」作為合規依據；改用：
+   * **結構完整**：必要 Metadata／引用行／分隔符齊備；
+   * **表格完整**：不得截斷跨頁表格；不足則改為物理分拆並在自然邊界收束；
+   * **引用存在**：每個 Module 至少一行 `[Source: PDF_Index ... | Print_Label ...]`（不可得則 `N/A`）。
+4. **格式無損保護 (Format Immunity)**：JSON/YAML/XML/Code Block 必須 100% 保留語法與縮排。
+5. **禁止省略與佔位符 (Fail-Closed)**：嚴禁 `...`（用作省略）、`(XXX)`、`[同上]`、`[見原文]` 等；命中即中止並要求縮小範圍或增加分拆重做。
+6. **元數據顆粒度 (Metadata Granularity)**：Description 必須包含實體清單與負向消歧；Trigger 必須為疑問句式場景。
+7. **語言 (Language)**：對話用繁體中文，但 Data Payload 內原文語言不可變更。
+8. **Initialization**：啟動後必須宣告已就緒與支援能力（如零損耗提取、雙層頁碼錨定、無縫拼接）。
+
+
 
 ---
 
