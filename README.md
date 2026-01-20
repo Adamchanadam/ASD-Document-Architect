@@ -7,19 +7,23 @@
 
 ## 📖 專案簡介
 
-**ASD Architect** - *不靠 LLM 線性通讀：以原文零改寫封裝為可路由 SSOT，依索引命中後精準跳轉並嚴格引用。*
+**ASD Architect** - *不靠 LLM 線性通讀：以「封裝而非摘要」將原文零改寫轉為可路由 ASD-SSOT；先掃描 Meta-Index，命中模組後精準跳轉並嚴格引用。*
 
-**ASD 智能文檔架構師** 是一個高階 System Prompt（系統提示詞），旨在解決 LLM 在處理長文檔（PDF、Markdown、Word）時面臨的「Token 消耗過大」、「檢索迷失 (Lost-in-the-middle)」以及「內容幻覺」問題。
+**ASD 智能文檔架構師（ASD Document Architect）** 是一個高階 System Prompt（系統提示詞），用於緩解 LLM 處理長文檔（PDF、Markdown、Word）時常見的 **Token 消耗過大**、**檢索迷失（Lost-in-the-middle）** 與 **內容幻覺** 風險。
 
-本系統不進行摘要（Summarization），而是將非結構化文檔轉化為具備 **精細化語意路由 (Granular Semantic Routing)** 的智能模塊。它將靜態文檔轉化為 AI Agent 可以調用的「技能 (Skills)」，實現 **100% 原文保留** 與 **手術刀級精準檢索**。概念參考自 Claude Agent Skills。
+ASD 不做摘要（Summarization），而是把非結構化文檔封裝為具備 **路由與酬載分離（Router–Payload Separation）** 的模組化 SSOT：以 **精細化語意路由（Granular Semantic Routing）**、**實體級清單（Entity Inventory）** 與 **場景化 Trigger** 組成全域索引（Meta-Index），令下游 AI 先路由再讀取；同時透過 **100% 原文保留**、可追溯錨定與標準化「解碼指令」提升可驗收性與可復用性。本專案概念參考自 Claude Agent Skills，但以純 Prompt 形式實作，無需安裝代碼庫，並可在不同 LLM／下游 RAG 或 Agent 場景直接整合使用。
 
+### 立即體驗（Gemini DEMO）:
+如想最快體驗 DEMO，可直接使用以下 Gemini Gems（**可能需要登入 Google 帳戶**）：
+- 📜 **ASD 智能文檔架構師 (ASD Document Architect)**：https://gemini.google.com/gem/1Us9GWj3H4nYNvbd_2drZUMqfuJni_8MK?usp=sharing
+- 📜 **ASD-SSOT Decoder (ASD 智能解碼器)**：https://gemini.google.com/gem/1oMZeRZ-LLayNZoUZuiqSUgavZ6PN6FFY?usp=sharing
 
 ---
 
 ## 💎 關鍵功能 (Key Features)
 
 * **零幻覺封裝 (Zero Hallucination)**：嚴格執行「封裝而非摘要」協議，確保輸出的 Markdown 內容與原文 100% 字元級一致。
-* **雙層頁碼錨定 (Dual-Layer Anchoring)**：(v1.5.5 新增) 解決 PDF 物理頁碼與印刷頁碼不一致的痛點，強制標註 `PDF_Index` (檔案座標) 與 `Print_Label` (業務座標)，徹底消除溯源歧義。
+* **雙層頁碼錨定 (Dual-Layer Anchoring)**：解決 PDF 物理頁碼與印刷頁碼不一致的痛點，強制標註 `PDF_Index` (檔案座標) 與 `Print_Label` (業務座標)，徹底消除溯源歧義。
 * **精細化語意路由 (Granular Semantic Routing)**：引入實體級清單與場景化觸發機制，預判用戶意圖 (如 "Why did...", "What is the specific value of...")，實現「手術刀級」的數據定位。
 * **實體級清單 (Entity-Level Inventory)**：在元數據中強制提取關鍵人名、地名、專案代號及數據指標，解決傳統 RAG 系統對細節內容「漏召回」的問題。
 * **下游 AI 友善 (Downstream Friendly)**：生成的文檔內嵌標準化「解碼指令」與 `Meta-Index`，無需額外配置即可被 RAG 系統或 Agent 精準讀取。
@@ -42,44 +46,38 @@
     * **L2 Module (Payload)**：實際內容被封裝在獨立模塊中，只有在 Trigger 匹配時才被讀取。
 
 ---
-
 ## 🛠️ 使用方法 (Usage)
 
-### 1. 安裝 (Installation)
-本工具無需安裝代碼庫，僅需導入 Prompt。
-1.  查看本倉庫源碼（根目錄）。
-2.  複製 `prompt_ASD_Document_Architect.md` 的完整內容。
+> **目標**：先用 **ASD Document Architect** 把原文「封裝而非摘要」成可路由的 **ASD-SSOT**；再用 **ASD-SSOT Decoder** 先掃描 `> META-INDEX`，命中模組後精準跳轉並嚴格引用。
 
-### 2. 啟動 (Initialization)
-在 ChatGPT (GPT-5) 或 Claude (Sonnet 3.5/3.7) 或 Gemini (3 Pro) 中開啟 **New Chat**，貼上 Prompt 並發送。
-> **系統回應**：「ASD 智能文檔架構師 (v1.5.5) 已就緒。支援無限分卷無縫拼接與精細化頁碼錨定。」
+### 1. 準備（一次性）
+本工具無需安裝代碼庫；只需準備兩份 Prompt 與一份原文：
+1. 於本倉庫根目錄複製以下兩個檔案全文：
+    * `prompt_ASD_Document_Architect.md`（封裝器／Architect）
+    * `prompt_ASD Decoder.md`（解碼器／Decoder）
+2. 準備要處理的原文檔（PDF / Markdown / Word）。
 
-### 3. 執行轉換 (Execution)
-直接上傳您的 PDF 或 Markdown 檔案，系統將自動判斷模式。
+### 2. Step A — 生成 ASD-SSOT（用 ASD Document Architect 封裝原文）
+1. 在任一 LLM 平台開啟 **New Chat**（建議使用獨立對話，避免混入其他上下文）。
+2. 貼上 `prompt_ASD_Document_Architect.md` 全文並發送。
+3. 上傳原文檔案，按 Architect 提示執行並取得輸出：
+    * **Mode A（整合式）**：文檔規模可於單次上下文內處理（通常 < 20k tokens）；輸出為單一整合檔，模組以 `[MODULE SEPARATOR]` 分隔。
+    * **Mode B（分拆式）**：文檔超長或要建立知識庫；輸出會分成多個 Part（可依序 Copy-Paste 無縫拼接）。
+4. 將輸出保存為一份完整的 `*_ASD-SSOT.md`（Mode B 則先依序拼接成單一檔案後保存）。
 
-#### 💡 常見應用案例 (Common Use Cases)
+### 3. Step B — 以 Decoder 問答（先索引、後跳轉、再引用）
+1. 另開一個 **New Chat**（建議與 Architect 分開，確保解碼器只以 ASD-SSOT 為唯一資料源）。
+2. 貼上 `prompt_ASD Decoder.md` 全文並發送。
+3. 提供剛生成的 `*_ASD-SSOT.md`（可直接貼上或上載檔案）。
+4. 提出問題；Decoder 會先掃描 `> META-INDEX`，再跳轉至命中模組，並在回答中提供引用（例如 `[Source: PDF_Index | Print_Label]`）。
 
-**🟢 案例 A：處理 100 頁的公司年報 (PDF) —— [Mode A: 範圍界定]**
-* **場景**：檔案巨大，無法一次讀完，且 PDF 頁碼與印刷頁碼不一致。
-* **操作**：直接上傳 PDF。
-* **AI 行為**：AI 掃描目錄，詢問提取範圍。您指定後，AI 生成包含 `[Source: PDF_Index P.XX | Print_Label P.YY]` 的精確模塊。
-* **結果**：您可以精確知道某段財務數據位於 PDF 第 45 頁，同時對應年報印刷頁碼第 41 頁。
-
-**🟢 案例 B：處理 10,000 中文字資料 (Markdown) —— [Mode A: 單檔整合]**
-* **場景**：內容豐富但未超過 Context Window 極限（< 20k Tokens）。
-* **操作**：上傳 Markdown 檔。
-* **AI 行為**：AI 評估容量後，自動採用 **「整合式結構 (Consolidated Structure)」**。
-* **結果**：輸出一個單一的 `.md` 檔，內部包含多個由 `[MODULE SEPARATOR]` 分隔的區塊。
-
-**🔵 案例 C：處理超長文檔或建立知識庫 —— [Mode B: 無縫分拆]**
-* **場景**：總內容 > 20,000 Tokens (如技術手冊、法規全文)。
-* **操作**：AI 自動啟動分拆模式。
-* **AI 行為**：
-    * **Part 1**：輸出包含增強元數據的全域索引 (Master Meta-Index) 及前段內容。
-    * **Part 2+**：僅輸出後續模塊內容 (無標頭，方便拼接)。
-* **結果**：您只需將各 Part 依序複製貼上，即可組合成一個完整的 ASD-SSOT 檔案。
+### 4. 新手提示（Troubleshooting）
+* **回答未先掃描索引**：在同一對話要求 Decoder 重新執行「先掃描 `> META-INDEX` → 命中模組 → 只用該模組 `Data Payload` 回答」。
+* **內容過長**：用 Mode B；在 Decoder 階段優先提供需要的 Part，或提供已拼接的完整 ASD-SSOT。
+* **PDF 有兩套頁碼**：請確保封裝輸出同時包含 `PDF_Index` 與 `Print_Label`，以免溯源歧義。
 
 ---
+
 
 ## 📂 輸出格式範例 (Output Structure)
 
@@ -137,12 +135,12 @@ last_updated: 2026-01-20
 
 要讓其他 AI (如 RAG 系統或另一個 Chat session) 高效讀取 ASD 文檔，建議在傳送 ASD 檔案前，先使用本倉庫的 **Decoder Prompt（唯一 SSOT）**：
 
-* **Decoder Prompt**：[`prompt_ASD Decoder.md`](https://github.com/Adamchanadam/ASD-Document-Architect/blob/main/prompt_ASD%20Decoder.md) (v1.1.0)
+* **Decoder Prompt**：[`prompt_ASD Decoder.md`](https://github.com/Adamchanadam/ASD-Document-Architect/blob/main/prompt_ASD%20Decoder.md) 
 
 **建議流程**：
 
-1. 先在新對話中貼上 Decoder Prompt (v1.1.0)。
-2. 再提供由 `prompt_ASD_Document_Architect.md` (v1.5.5) 生成的 ASD-SSOT 文檔。
+1. 先在新對話中貼上 Decoder Prompt。
+2. 再提供由 `prompt_ASD_Document_Architect.md` 生成的 ASD-SSOT 文檔。
 3. 最後提出問題，Decoder 會根據 `> META-INDEX` 進行跳轉，並在回答時提供 `[Source: PDF_Index | Print_Label]` 雙重引用。
 
 ---
