@@ -3,20 +3,24 @@
 > **Agent-Skill Driven Single Source of Truth (ASD-SSOT)**
 > 專為 LLM 長文本檢索設計的高效、零幻覺、結構化封裝系統。
 
-![Version](https://img.shields.io/badge/Version-v1.5.4-blue.svg) ![Language](https://img.shields.io/badge/Language-Traditional%20Chinese-green.svg) ![License](https://img.shields.io/badge/License-MIT-orange.svg)
+![Version](https://img.shields.io/badge/Version-v1.5.5-blue.svg) ![Language](https://img.shields.io/badge/Language-Traditional%20Chinese-green.svg) ![License](https://img.shields.io/badge/License-MIT-orange.svg)
 
 ## 📖 專案簡介
+
+**ASD Architect** - *不靠 LLM 線性通讀：以原文零改寫封裝為可路由 SSOT，依索引命中後精準跳轉並嚴格引用。*
 
 **ASD 智能文檔架構師** 是一個高階 System Prompt（系統提示詞），旨在解決 LLM 在處理長文檔（PDF、Markdown、Word）時面臨的「Token 消耗過大」、「檢索迷失 (Lost-in-the-middle)」以及「內容幻覺」問題。
 
 本系統不進行摘要（Summarization），而是將非結構化文檔轉化為具備 **精細化語意路由 (Granular Semantic Routing)** 的智能模塊。它將靜態文檔轉化為 AI Agent 可以調用的「技能 (Skills)」，實現 **100% 原文保留** 與 **手術刀級精準檢索**。概念參考自 Claude Agent Skills。
+
 
 ---
 
 ## 💎 關鍵功能 (Key Features)
 
 * **零幻覺封裝 (Zero Hallucination)**：嚴格執行「封裝而非摘要」協議，確保輸出的 Markdown 內容與原文 100% 字元級一致。
-* **精細化語意路由 (Granular Semantic Routing)**：(v1.5.4 新增) 引入實體級清單與場景化觸發機制，預判用戶意圖 (如 "Why did...", "What is the specific value of...")，實現「手術刀級」的數據定位。
+* **雙層頁碼錨定 (Dual-Layer Anchoring)**：(v1.5.5 新增) 解決 PDF 物理頁碼與印刷頁碼不一致的痛點，強制標註 `PDF_Index` (檔案座標) 與 `Print_Label` (業務座標)，徹底消除溯源歧義。
+* **精細化語意路由 (Granular Semantic Routing)**：引入實體級清單與場景化觸發機制，預判用戶意圖 (如 "Why did...", "What is the specific value of...")，實現「手術刀級」的數據定位。
 * **實體級清單 (Entity-Level Inventory)**：在元數據中強制提取關鍵人名、地名、專案代號及數據指標，解決傳統 RAG 系統對細節內容「漏召回」的問題。
 * **下游 AI 友善 (Downstream Friendly)**：生成的文檔內嵌標準化「解碼指令」與 `Meta-Index`，無需額外配置即可被 RAG 系統或 Agent 精準讀取。
 * **無縫分拆 (Seamless Stitching)**：內建 20,000 Token 閾值檢測，對於超長文檔自動採用「物理分拆」策略，並支援 Copy-Paste 完美無縫合併。
@@ -29,7 +33,7 @@
     * **封裝而非摘要**：嚴禁改寫或縮減內容。所有的 URL、表格、數據、代碼塊均保持 100% 字元級一致。
     * **完整性檢查**：內建多項檢查機制，確保輸出內容行數不減反增。
 
-2.  **元數據增強 (Metadata Enrichment)** (v1.5.4 核心)
+2.  **元數據增強 (Metadata Enrichment)**
     * **Description (Granular)**：必須包含「摘要」、「實體清單」與「負向消歧」三個層次。
     * **Trigger (Interrogative)**：必須使用具體場景的疑問句，而非單純的關鍵詞標籤。
 
@@ -47,8 +51,8 @@
 2.  複製 `prompt_ASD_Document_Architect.md` 的完整內容。
 
 ### 2. 啟動 (Initialization)
-在 ChatGPT (GPT-5) 或 Claude (Sonnet 3.5/3.7) 或 Gemini (1.5 Pro) 中開啟 **New Chat**，貼上 Prompt 並發送。
-> **系統回應**：「ASD 智能文檔架構師 已就緒。支援無限分卷無縫拼接與精細化語意路由。」
+在 ChatGPT (GPT-5) 或 Claude (Sonnet 3.5/3.7) 或 Gemini (3 Pro) 中開啟 **New Chat**，貼上 Prompt 並發送。
+> **系統回應**：「ASD 智能文檔架構師 (v1.5.5) 已就緒。支援無限分卷無縫拼接與精細化頁碼錨定。」
 
 ### 3. 執行轉換 (Execution)
 直接上傳您的 PDF 或 Markdown 檔案，系統將自動判斷模式。
@@ -56,16 +60,16 @@
 #### 💡 常見應用案例 (Common Use Cases)
 
 **🟢 案例 A：處理 100 頁的公司年報 (PDF) —— [Mode A: 範圍界定]**
-* **場景**：檔案巨大，無法一次讀完。
+* **場景**：檔案巨大，無法一次讀完，且 PDF 頁碼與印刷頁碼不一致。
 * **操作**：直接上傳 PDF。
-* **AI 行為**：AI 不會硬讀全文，而是先掃描前 20 頁目錄，詢問您要提取哪部分（如：財務摘要、ESG 報告）。
-* **結果**：您指定「財務摘要」後，AI 僅提取該部分並進行「實體增強封裝」。
+* **AI 行為**：AI 掃描目錄，詢問提取範圍。您指定後，AI 生成包含 `[Source: PDF_Index P.XX | Print_Label P.YY]` 的精確模塊。
+* **結果**：您可以精確知道某段財務數據位於 PDF 第 45 頁，同時對應年報印刷頁碼第 41 頁。
 
 **🟢 案例 B：處理 10,000 中文字資料 (Markdown) —— [Mode A: 單檔整合]**
 * **場景**：內容豐富但未超過 Context Window 極限（< 20k Tokens）。
 * **操作**：上傳 Markdown 檔。
 * **AI 行為**：AI 評估容量後，自動採用 **「整合式結構 (Consolidated Structure)」**。
-* **結果**：輸出一個單一的 `.md` 檔，內部包含多個由 `[MODULE SEPARATOR]` 分隔的區塊，每個區塊均附帶精細化的 Description 與 Trigger。
+* **結果**：輸出一個單一的 `.md` 檔，內部包含多個由 `[MODULE SEPARATOR]` 分隔的區塊。
 
 **🔵 案例 C：處理超長文檔或建立知識庫 —— [Mode B: 無縫分拆]**
 * **場景**：總內容 > 20,000 Tokens (如技術手冊、法規全文)。
@@ -79,7 +83,7 @@
 
 ## 📂 輸出格式範例 (Output Structure)
 
-ASD v1.5.4 生成的文檔具備 **自解釋性** 與 **高顆粒度**，包含給下游 AI 的精細化指令：
+ASD v1.5.5 生成的文檔具備 **自解釋性** 與 **高顆粒度**，包含給下游 AI 的精細化指令：
 
 ```markdown
 # [ROOT] 2025 全球局勢報告 (Consolidated)
@@ -103,7 +107,7 @@ ASD v1.5.4 生成的文檔具備 **自解釋性** 與 **高顆粒度**，包含�
 ---
 module_id: trade_data_2025
 source_file: report.pdf
-last_updated: 2026-01-19
+last_updated: 2026-01-20
 ---
 
 ### [Data Payload: 美中貿易數據]
@@ -119,7 +123,7 @@ last_updated: 2026-01-19
 
 (此處為 100% 原文內容...)
 
-[Source: PDF P.12]
+[Source: PDF_Index P.12 | Print_Label P.8]
 
 ---
 ========== [MODULE SEPARATOR] ==========
@@ -133,33 +137,34 @@ last_updated: 2026-01-19
 
 要讓其他 AI (如 RAG 系統或另一個 Chat session) 高效讀取 ASD 文檔，建議在傳送 ASD 檔案前，先使用本倉庫的 **Decoder Prompt（唯一 SSOT）**：
 
-* **Decoder Prompt**：[`prompt_ASD Decoder.md`](https://www.google.com/search?q=./prompt_ASD%2520Decoder.md)
+* **Decoder Prompt**：[`prompt_ASD Decoder.md`](https://github.com/Adamchanadam/ASD-Document-Architect/blob/main/prompt_ASD%20Decoder.md) (v1.1.0)
 
 **建議流程**：
 
-1. 先在新對話中貼上 Decoder Prompt。
-2. 再提供由 `prompt_ASD_Document_Architect.md` 生成的 ASD-SSOT 文檔。
-3. 最後提出問題，Decoder 會根據 `> META-INDEX` 與 `Description (Granular)` 進行結構化跳轉讀取並嚴格引用。
+1. 先在新對話中貼上 Decoder Prompt (v1.1.0)。
+2. 再提供由 `prompt_ASD_Document_Architect.md` (v1.5.5) 生成的 ASD-SSOT 文檔。
+3. 最後提出問題，Decoder 會根據 `> META-INDEX` 進行跳轉，並在回答時提供 `[Source: PDF_Index | Print_Label]` 雙重引用。
 
 ---
 
 ## ⚠️ 操作守則 (Operational Rules)
 
-系統在輸出前會強制執行以下檢查：
+系統在輸出前會強制執行 **8 項完整性檢查**，包含：
 
-1. **完整性**：URL、表格是否跑版？
-2. **行數驗證**：新輸出的行數必須 > 原文行數。
-3. **格式保護**：JSON/YAML/Code Block 必須保留語法。
-4. **禁止佔位符**：嚴禁出現 `(...)` 或 `[同上]`。
-5. **元數據顆粒度 (Metadata Granularity)**：檢查 Description 是否已列出具體實體？Trigger 是否包含疑問句？嚴禁使用籠統描述。
+1. **頁碼錨定 (Anchoring)**：嚴格執行 `PDF_Index` 與 `Print_Label` 雙重標註。
+2. **完整性**：URL、表格是否跑版？
+3. **行數驗證**：新輸出的行數必須 > 原文行數。
+4. **格式保護**：JSON/YAML/Code Block 必須保留語法。
+5. **禁止佔位符**：嚴禁出現 `(...)` 或 `[同上]`。
+6. **元數據顆粒度**：Description 必須包含實體清單，Trigger 必須是疑問句。
+... (詳見 Prompt 內文)
 
 ---
 
 ## 📜 License
 
-[MIT License](https://www.google.com/search?q=LICENSE)
+[MIT License](https://opensource.org/licenses/MIT)
 
 ---
 
-**ASD Architect** - *Turning Documents into Agent Skills.*
-
+**ASD Architect** - *不靠 LLM 線性通讀：以原文零改寫封裝為可路由 SSOT，依索引命中後精準跳轉並嚴格引用。*
