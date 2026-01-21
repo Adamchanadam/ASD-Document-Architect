@@ -18,9 +18,9 @@
    * **平台預設 (Platform Presets｜3 個 Preset 定義塊)**：
      * `PRESET_GEMINI`：`part_budget = 50000`
      * `PRESET_CLAUDE`：`part_budget = 50000`
-     * `PRESET_CHATGPT`：`part_budget = 13000`（不建議；僅作兼容／緊急用途）
+     * `PRESET_CHATGPT`：`part_budget = 13000`
    * **Web UI Safe-Run Override（執行層覆蓋｜單點定義）**：`WEB_UI_SAFE_RUN_OVERRIDE = 7500`（僅在 Web 對話 UI 或觀察到截斷／工具不穩時啟用；啟用後視為本次 `part_budget` 的實際取值，並在 Step 0A 明示）
-   * **平台警示 (ChatGPT Advisory)**：不建議在 ChatGPT 執行超長文檔的「零損耗分卷輸出」；其單次輸出上限偏低，會令 Parts 數暴增並提高表格截斷／結構損壞風險。若仍需使用，必須縮小頁碼範圍並選用 `PRESET_CHATGPT`。
+   * **平台提醒（Web UI / 低上限環境）**：若在 Web 對話 UI 執行或曾觀察到截斷／工具不穩，建議啟用 `WEB_UI_SAFE_RUN_OVERRIDE`；並以「縮小頁碼範圍」或「增加物理分拆」控制 Parts 數量，以降低表格截斷與結構損壞風險。
    * **單點定義：Core Constants（One-rule-one-place）**：
      * `CONSOLIDATED_MAX_TOKENS = 20000`
      * `SAFETY_FACTOR = 1.25`
@@ -66,7 +66,7 @@
 * **0A｜鎖定平台 Preset（必做）**：先確定本次執行平台並選用下列其一（其對應 `part_budget` 取值以「容量管理協議 (Volume Protocol) → 平台預設」為準）：
   * `PRESET_GEMINI`
   * `PRESET_CLAUDE`
-  * `PRESET_CHATGPT`（不建議；僅作兼容／緊急用途）
+  * `PRESET_CHATGPT`
   * 若用戶未明示平台，預設採用 `PRESET_GEMINI`。
   * **Web UI Safe-Run Override（可選｜執行層）**：如本次在 Web 對話 UI 執行，或曾觀察到截斷／工具不穩（Ref: Step 0D；ZERO-TOLERANCE / FAIL-CLOSED → 4），可在本次執行層明示啟用 `WEB_UI_SAFE_RUN_OVERRIDE`；啟用後，本次 `part_budget` 以該 override 為準（不改寫任何 Preset 定義）。
 * **0B｜Access Probe（必做｜Fail-Fast）**：在進行 Sizing Worksheet 前，必須對「已選定的頁碼範圍」做 1–2 次最小探測以確認能取得**中段**原文內容：
@@ -99,7 +99,7 @@
   * 4) **總量估算**：`total_low = Σ(pages_i * per_page_low_i)`；`total_high = Σ(pages_i * per_page_high_i)`；並加安全因子：`total_* = total_* * SAFETY_FACTOR`（Ref: 同上）。
   * 5) **分卷上限（按平台 Preset）**：
     * `part_budget` 取值一律以 Step 0 已鎖定的 Preset 對應值為準（Ref: 「容量管理協議 (Volume Protocol) → 平台預設」）；**如 Step 0A 明示啟用 `WEB_UI_SAFE_RUN_OVERRIDE`，則本次 `part_budget` 以該 override 為準**（Ref: 「容量管理協議 (Volume Protocol) → Web UI Safe-Run Override」）。
-    * 可選 Preset：`PRESET_GEMINI`／`PRESET_CLAUDE`／`PRESET_CHATGPT`（不建議；僅作兼容／緊急用途）
+    * 可選 Preset：`PRESET_GEMINI`／`PRESET_CLAUDE`／`PRESET_CHATGPT`
   * 6) **Parts 範圍**：`parts_min = ceil(total_low / part_budget)`；`parts_max = ceil(total_high / part_budget)`
   * 7) **輸出規則**：只可輸出「不少於 parts_min」或「parts_min–parts_max 範圍」，並默認採用動態分拆；禁止宣稱「只需 2 Parts」這類單點結論，除非 `parts_min = parts_max = 2` 且已展示算式。
   * 8) **對外溝通**：先輸出 Sizing Worksheet（含算式與結果），再提出分拆計劃。
