@@ -160,6 +160,23 @@ source_file: example.pdf
 
 ---
 
+## 🗨️ 已知問題　(Q&A)
+
+### Q1：為何有時候封裝到一半會被迫中止，不能「先輸出再補」？
+
+**A：因為系統採用 Fail-Closed。** 一旦偵測到讀取不連續、工具回傳空值/截斷、或輸出中出現任何省略/佔位符風險，Architect 必須立即中止以避免污染；此情況只能透過縮小頁碼範圍、增加物理分拆、重上載/重試，或改用 Text-Paste 分批處理來解決。
+
+### Q2：為何 Decoder 有時答「Out of Scope」，但明明內容可能在文檔某處？
+
+**A：因為 Decoder 嚴禁在 Payload 內全文模糊搜索，只能靠索引與模組錨點路由。** 若上游封裝時的 `> META-INDEX`／`Description`／`Trigger Context` 顆粒度不足、或模組切分不理想，Decoder 可能無法正確命中模組而回覆 Out of Scope；此情況需回到 Architect 重新分模組或加強索引描述（而非要求 Decoder 亂搜全文）。
+
+### Q3：為何頁碼引用有時只能是 `N/A`，或不適用於人類看到的印刷頁碼？
+
+**A：因為系統只支援 `PDF_Index`（PDF Viewer/讀取工具的絕對頁序）作為唯一頁碼真理來源。** 當輸入來源為 Text-Paste、純文字、或平台無法可靠提供頁序時，`PDF_Index` 必須填 `N/A`；同時系統不輸出/不推算印刷頁碼，因此人類若要用印刷頁碼定位，需自行在 PDF Viewer 內對照查找。
+
+
+
+---
 ## ⚠️ 操作守則 (Operational Rules)
 
 系統在輸出前會強制執行完整性檢查，重點包括：
