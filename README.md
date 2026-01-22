@@ -100,7 +100,7 @@
 - 執行：按 MODE A 自動物理分拆（每檔約 1,000 行量級），可人工 copy-paste 合併為單一 `.md`
 - 途中：曾出現工具截斷（Tool Truncation），依指令轉入 Text-Paste 分批補齊後完成封裝
 - 後續：按 MODE B 提取各模塊 Trigger Context 與 Entity Inventory，生成 Master Knowledge Index（`.md`）
-- 如倉庫內提供 `sample_doc` 目錄（示例文件），可用作對照參考與教學演示
+- 如倉庫內提供 `sample_doc` 目錄 [示例文件](https://github.com/Adamchanadam/ASD-Document-Architect/tree/main/sample_doc)，可用作對照參考與教學演示
 
 **Scope Audit Report（範圍審計報告）**：
 | 模塊 (Module) | Requested | Executed | Method |
