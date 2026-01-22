@@ -5,32 +5,63 @@
 
 ![Version](https://img.shields.io/badge/Version-v1.7.2-blue.svg) ![Language](https://img.shields.io/badge/Language-Traditional%20Chinese-green.svg) ![License](https://img.shields.io/badge/License-MIT-orange.svg)
 
+**一圖盡覽︰為何要 ASD？**
+![ASD overview - Gemini POV](what_is_it/ASD_overview_Gemini_POV_v1.png)
+
+
+
+
+---
+### 🌟 立即體驗（Gemini DEMO）
+如需最快體驗，可直接使用以下 Gemini Gems（可能需要登入 Google 帳戶）：
+
+![Gemini-GEM-ASD-Architech](./what_is_it/gemini_gem_architech_ui.png)
+- 📜 **ASD 智能文檔架構師 (ASD Document Architect)**：https://gemini.google.com/gem/1Us9GWj3H4nYNvbd_2drZUMqfuJni_8MK?usp=sharing
+
+
+![Gemini-GEM-ASD-Decoder](./what_is_it/gemini_gem_decoder_ui.png)
+- 📜 **ASD-SSOT Decoder (ASD 智能解碼器)**：https://gemini.google.com/gem/1oMZeRZ-LLayNZoUZuiqSUgavZ6PN6FFY?usp=sharing
+
+---
+
 ## 📖 專案簡介
 
-🔎 ASD 的用途很直接：先把長文檔整理成「可定位、可分段、可引用」的結構化檔案，再用同一套結構做問答與審計。
+🔎 ASD 的用途很直接：先把長文檔整理成「可定位、可分段、可引用」的結構化檔案，再用同一套結構做問答與審計。概念參考自 **Claud Agent Skill** 🙏 ，將之轉化為長文/多檔的 SSOT 內容應用，提高答題命中率。
 
 本專案由兩個 System Prompt 組成，建議按次序使用：
 
 1) **`prompt_ASD_Document_Architect.md`（Architect｜封裝器）**  
-把原始長文檔（PDF / Markdown / Word）封裝為可路由的 **ASD-SSOT**：  
-- **封裝而非摘要**：以「原文零改寫、零刪減」為設計目標，並以 Fail-Closed 作為指令級約束  
-- 生成可路由的 `> META-INDEX:` 與模組化 `## [MODULE X]`  
-- 在超出單次輸出上限時，支援多卷（Part 1 / Part N）物理分拆與增量索引更新  
-- 讀取受限或工具截斷時，可轉入 Text-Paste 分批處理（只處理下一個可驗收批次）
+把原始長文檔（PDF / Markdown / Word）封裝為附帶索引(路由)的 **ASD-SSOT**，特點：  
+- 🌟 Mode A : 將大型 PDF , 多個 Markdown 檔交給 AI 轉換成 ASD 格式，輸出有導航的  Markdown
+- **內容封裝而非摘要**：以「原文零改寫、零刪減」為設計目標
+- 自動生成附帶索引(路由)的 `> META-INDEX:` 與模組化 `## [MODULE X]`  
+- 在內容超出單次輸出上限時，自動多卷分拆（Part 1 / Part N）物理分拆與增量索引更新  
+- 若 AI 讀取受限或工具截斷時，可轉入 Text-Paste 分批處理
+- 🌟 Mode B : 將多個 ASD Markdown 交將 AI ，生成 Master Index 索引，將方便下游 AI 準確讀取內容：
+
 
 2) **`prompt_ASD Decoder.md`（Decoder｜解碼器）**  
-用於問答與檢索：先讀索引、精準跳轉命中模組、只用命中模組的 `[Data Payload]` 回答，並附上 **PDF_Index** 頁碼引用（Fail-Closed）。如需審計/回測，可額外輸出 `AUDIT_EVIDENCE_PACK`（逐條主張綁定 Evidence ID、來源檔與可回查片段）。如只提供 Master Knowledge Index 而未提供對應 ASD 檔案/分卷，系統會中止並要求補檔（Fail-Closed）。
+用於精準的問答與檢索：先讀索引、精準跳轉命中模組、只用命中模組的 `[Data Payload]`內容回答，並附上 **PDF_Index** 頁碼引用（Fail-Closed）。如需審計/回測，可額外輸出 `AUDIT_EVIDENCE_PACK`（逐條主張綁定 Evidence ID、來源檔與可回查片段）。
 
 **ASD 的核心目標是降低 LLM 處理長文檔常見風險：**
 - 把長文閱讀改成「先看索引，再只讀相關段落」，減少一次要處理的內容量，從而降低漏讀與跳步機率。  
 - 檢索迷失（Lost-in-the-middle）  
 - 內容幻覺（憑印象補全、引用漂移、頁碼亂填）
 
-## 🧠 為何要先轉成 ASD 才交給 AI 使用？（模型視角｜Gemini 用後感）
+
+----
+
+## 🧠 Gemini 用後感 😂 為何要先轉成 ASD 才交給 AI 使用？（模型視角）
+
+![ASD overview - For fun](what_is_it/ASD_Interview_cap.png)
+> 我是 Gemini。若以「個人訪談」的角度來說，ASD 這套結構會直接影響我處理資訊時的工作方式，尤其在長文檔情境下更明顯。  
+>
+了解 ASD vs. 未經 ASD 的 Markdown:對比分析 (https://cobeing.uk/gemini-asd-review)
 
 🔎 對新手而言，最值得先理解的一點：ASD 不是要模型「更聰明」，而是把資料整理成「更容易被模型正確讀取與回查」的形狀。
 
-> 我是 Gemini。若以「個人訪談」的角度來說，ASD 這套結構會直接影響我處理資訊時的工作方式，尤其在長文檔情境下更明顯。  
+
+
 >
 > ### 1) 為何 `Master_Index.md` 對我很重要？
 > 它就像一個「意圖導航儀（Intent Router）」。  
@@ -46,6 +77,9 @@
 > **我的選擇**：如果目標是「可回查、可審計、可重放」的問答，我會偏好 ASD 結構。它讓我像查詢資料庫一樣先定位、再讀取，而不是在整篇長文裡猜測與游走。
 
 ## ✅ 新手常見疑問：可以直接把 ASD 檔丟給 LLM 問答嗎？是否一定要用 Decoder？
+
+![ASD how to use](what_is_it/ASD_how_to_use_v1.png)
+
 
 🔎 可以直接問；但若希望最大化 ASD 的「索引路由、邊界約束、可審計引用」等設計收益，通常仍建議搭配 Decoder 使用。
 
@@ -71,10 +105,10 @@ ASD 系統可以用兩種方式運作，差別在於「便利」與「可控性�
 
 > **一句話總結**：ASD 文檔可視為「資料（Data）」，Decoder 可視為「讀取規則（Logic）」。兩者結合時，最能體現 ASD 的設計目標；但在只求快速查閱時，直接問亦可行。
 
-### 立即體驗（Gemini DEMO）
-如需最快體驗，可直接使用以下 Gemini Gems（可能需要登入 Google 帳戶）：
-- 📜 **ASD 智能文檔架構師 (ASD Document Architect)**：https://gemini.google.com/gem/1Us9GWj3H4nYNvbd_2drZUMqfuJni_8MK?usp=sharing
-- 📜 **ASD-SSOT Decoder (ASD 智能解碼器)**：https://gemini.google.com/gem/1oMZeRZ-LLayNZoUZuiqSUgavZ6PN6FFY?usp=sharing
+---
+![ASD_Architecting_AI_Document_Precision_cover.png](what_is_it/ASD_Architecting_AI_Document_Precision_cover.png)
+
+**了解 ASD 結構：將長文檔轉化為 AI 的「精準資料庫」實務指南**  [打開︰ ASD_Architecting_AI_Document_Precision.pdf](what_is_it/ASD_Architecting_AI_Document_Precision.pdf)
 
 ---
 
@@ -94,18 +128,6 @@ ASD 系統可以用兩種方式運作，差別在於「便利」與「可控性�
 
 > **重要提示（驗收與免責）**：ASD 以「指令級」方式要求零損耗，但 LLM 在實際執行仍可能受工具權限、輸出截斷、OCR 品質、表格跨頁等因素影響。建議對輸出結果進行人手抽樣校對與結構性驗收（見下文「操作守則」與「已知問題」）。
 
----
-
-## 🧾 術語速讀（新手友善）
-
-🔎 以下術語只需理解一次，其後閱讀整份 README 即可自洽。
-
-- **ASD-SSOT**：由 Architect 產出的結構化文檔，包含索引與多個模塊，便於定位與引用。
-- **模塊（Module）**：把原文按邏輯切分的段落單位；Decoder 只會讀取命中的模塊，避免無關內容干擾。
-- **索引（Index / Master Knowledge Index）**：一份「路由表」，用來告訴 Decoder 相關內容在哪個模塊；索引本身不包含原文內容。
-- **`PDF_Index`**：PDF Viewer／讀取工具顯示的絕對頁序；如平台無法可靠提供頁序，則以 `N/A` 表示。
-- **Text-Paste**：當平台讀取 PDF 失敗或截斷時，改用手動貼上文字分批處理的方式。
-- **`AUDIT_EVIDENCE_PACK`**：可選的審計輸出，把答案拆成「主張 → 證據片段 → 出處」的對照表，便於回測。
 
 ---
 
@@ -116,13 +138,13 @@ ASD 系統可以用兩種方式運作，差別在於「便利」與「可控性�
 ### 1. 準備（一次性）
 本工具無需安裝代碼庫；只需兩份 Prompt 與一份原文：
 1. 於本倉庫根目錄複製以下兩個檔案全文：
-   * `prompt_ASD_Document_Architect.md`（封裝器／Architect）
-   * `prompt_ASD Decoder.md`（解碼器／Decoder）
+   * [prompt_ASD_Document_Architect.md](./prompt_ASD_Document_Architect.md)（封裝器／Architect）
+   * [prompt_ASD_Decoder.md](./prompt_ASD_Decoder.md)（解碼器／Decoder）
 2. 準備要處理的原文檔案（PDF / Markdown / Word）。
 
 ### 2. Step A — 生成 ASD-SSOT（用 Architect 封裝原文）
 1. 在任一 LLM 平台開啟 **New Chat**（建議使用獨立對話，避免混入其他上下文）。
-2. 貼上 `prompt_ASD_Document_Architect.md` 全文並發送。
+2. 貼上 [prompt_ASD_Document_Architect.md](./prompt_ASD_Document_Architect.md) 全文並發送。
 3. 上傳原文檔案，按 Architect 提示執行：
    * **MODE A（封裝原始長文）**：輸出單檔或多卷 Part（依容量與平台限制自動處理）。
    * **MODE B（建立 Master Knowledge Index）**：在已保存多份 ASD-SSOT 後，用檔名清單與必要輸入建立可跳轉的總索引；若缺必要輸入將直接中止（Fail-Closed）。
@@ -130,7 +152,7 @@ ASD 系統可以用兩種方式運作，差別在於「便利」與「可控性�
 
 ### 3. Step B — 以 Decoder 問答（先索引、後跳轉、再引用）
 1. 另開一個 **New Chat**（建議與 Architect 分開，確保解碼器只以 ASD-SSOT 為唯一資料源）。
-2. 貼上 `prompt_ASD Decoder.md` 全文並發送。
+2. 貼上 [prompt_ASD_Decoder.md](./prompt_ASD_Decoder.md) 全文並發送。
 3. 提供剛生成的 ASD-SSOT：
    * 若是分拆檔：先提供 Part 1，按需要再依序提供 Part 2、Part 3……
    * 若同時提供多個 ASD 檔案：Decoder 會先分別建路由表，再合併候選模組後逐一跳轉。
@@ -142,15 +164,16 @@ ASD 系統可以用兩種方式運作，差別在於「便利」與「可控性�
 
 ---
 
-## ✅ 實測摘要（範例：Gemini 3.0 Pro（網頁版））
+## ✅ LLM 實測案例（Gemini 3.0 Pro（網頁版）- 附 Sample 文檔）
 
-🔎 以下為一次實測的流程摘要，用於說明 ASD 在「超長 PDF + 非連續頁碼 + 工具截斷」情境下的可行運作方式（不構成對所有平台/所有文件的保證）。
+🔎 以下為一次實測的流程摘要，用於說明 ASD 在「超長 PDF + 非連續頁碼 + 工具截斷」情境下的可行運作方式︰
 
-- 輸入：200+ 頁 PDF；選取非連續的多段頁碼範圍
-- 執行：按 MODE A 自動物理分拆（每檔約 1,000 行量級），可人工 copy-paste 合併為單一 `.md`
-- 途中：曾出現工具截斷（Tool Truncation），依指令轉入 Text-Paste 分批補齊後完成封裝
-- 後續：按 MODE B 提取各模塊 Trigger Context 與 Entity Inventory，生成 Master Knowledge Index（`.md`）
-- 完成品及測試檔見 'sample_doc' 目錄
+- 📍 輸入：200+ 頁 PDF；選取非連續的多段頁碼範圍 (🗂️領展房產基金（823） 2024 年報 :  [Sample_823_2024_Annual_Report_Financial_Statements.pdf](./sample_doc/Sample_823_2024_Annual_Report_Financial_Statements.pdf))
+- 📍 執行：按 MODE A 自動物理分拆（每檔約 1,000 行量級），可人工 copy-paste 合併為單一 Markdown  [Sample_823_2024_Annual_Report_Financial_Statements_ASD.md](./sample_doc/Sample_823_2024_Annual_Report_Financial_Statements_ASD.md)
+- 📍 途中：曾出現工具截斷（Tool Truncation），依指令轉入 Text-Paste 分批補齊後完成封裝
+- 📍 後續：按 MODE B 提取各模塊 Trigger Context 與 Entity Inventory，生成 Master Knowledge Index [Sample_823_Master_ASD_Index.md](./sample_doc/Sample_823_Master_ASD_Index.md)
+- 📍 Decoder 提問答案：[Sample_823_Decoder_Question_Answer.md](./sample_doc/Sample_823_Decoder_Question_Answer.md)
+- 完成品及測試檔見 [sample_doc](./sample_doc) 目錄
 
 **實測摘要 : Result of Scope Audit Report（範圍審計報告）**：
 | 模塊 (Module) | 您要求的範圍 (Requested) | 實際執行的範圍 (Executed) | 讀取方式 (Method) |
@@ -203,7 +226,7 @@ source_file: example.pdf
 
 🔎 下游整合的核心做法很簡單：先給 Decoder Prompt，再給 ASD-SSOT 檔案，最後提問；需要嚴格審計時，再要求輸出 `AUDIT_EVIDENCE_PACK`。
 
-* **Decoder Prompt**：`prompt_ASD Decoder.md`
+* **Decoder Prompt**： [prompt_ASD_Decoder.md](./prompt_ASD_Decoder.md)
 
 **建議流程**：
 
@@ -259,6 +282,16 @@ source_file: example.pdf
 6. **資料源邊界 (Data Boundary)**：回答只可使用命中模組的 `[Data Payload]`；缺資訊即回覆 Out of Scope。
 7. **人手驗收建議（推薦）**：對關鍵表格、數字與條款段落進行抽樣校對；並檢查是否存在截斷、重覆片段、或結構性缺件（分隔符／引用行／Metadata 欄位）。
 
+---
+
+## 🧾 術語速讀（新手友善）
+
+- **ASD-SSOT**：由 ASD Architect 產出的結構化文檔，包含索引與多個模塊，便於定位與引用。
+- **模塊（Module）**：把原文內容按邏輯語義切分的段落單位；Decoder 只會讀取命中的模塊，避免無關內容干擾。
+- **索引（Index / Master Knowledge Index）**：一份索引「路由表」，用來告訴 Decoder 相關內容在哪個模塊；索引本身不包含原文內容。
+- **`PDF_Index`**：PDF Viewer／讀取工具顯示的絕對頁序；如平台無法可靠提供頁序，則以 `N/A` 表示。
+- **Text-Paste**：當平台讀取 PDF 失敗或截斷時，改用手動貼上文字分批處理的方式。
+- **`AUDIT_EVIDENCE_PACK`**：可選的審計輸出，把答案拆成「主張 → 證據片段 → 出處」的對照表，便於回測。
 ---
 
 ## 📜 License
