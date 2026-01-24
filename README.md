@@ -173,7 +173,7 @@ ASD 系統可以用兩種方式運作，差別在於「便利」與「可控性�
 - 📍 設定好自選提取章節的範圍，執行：按 MODE A 自動物理分拆（每檔約 1,000 行量級），可人工 copy-paste 合併為單一 Markdown  [Sample_823_2024_Annual_Report_Financial_Statements_ASD.md](./sample_doc/Sample_823_2024_Annual_Report_Financial_Statements_ASD.md)
 - 📍 途中：曾出現工具截斷（Tool Truncation），依指令轉入 Text-Paste 分批補齊後完成封裝
 - 📍 後續：按 MODE B 提取各模塊 Trigger Context 與 Entity Inventory，生成 Master Knowledge Index [Sample_823_Master_ASD_Index.md](./sample_doc/Sample_823_Master_ASD_Index.md)
-- 📍 Decoder 提問答案：[Sample_823_Decoder_Question_Answer.md](./sample_doc/Sample_823_Decoder_Question_Answer.md)
+- 📍 Decoder 提問答案：[Sample_823_Decoder_Question_Answer.md](./sample_doc/Sample_823_Decoder_answer.md)
 - 完成品及測試檔見 [sample_doc](./sample_doc) 目錄
 
 **實測摘要 : Result of Scope Audit Report（範圍審計報告）**：
