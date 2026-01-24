@@ -9,7 +9,7 @@
 ![ASD overview - Gemini POV](what_is_it/ASD_overview_Gemini_POV_v1.png)
 
 
-> 🔎 ASD Document Architect + ASD Decoder 是一套「長文檔 → 模組化 SSOT → 可追溯問答」的工程化方法：先把原文整理成可依索引精準定位、可分流調用的模組（ASD-SSOT），再由 ASD Decoder 依 Master Index 進行檢索／引用／作答，並偏向 Fail-Closed（答不到則明示）。
+> 🔎 ASD Document Architect + ASD Decoder 是一套專門將 SSOT（特別是長文 PDF/MD），先由 ASD Document Architect 轉為「可索引、可分流、可定位」的模組化 ASD-SSOT（含 Master Index），再由 ASD Decoder 依 Master Index 路由到指定模組，按原文精準引用作答（答不到則明示），並輸出可逐句回核的證據鏈（Evidence Pack），形成「長文 → ASD-SSOT → 路由檢索 → 引用作答 → 可審計追溯」的工程化方法。概念來自 **Claude Agent Skills**，並延伸到 SSOT 結構重構與可審計問答之上。
 
 ---
 ### 🌟 立即體驗（Gemini DEMO）
@@ -26,7 +26,7 @@
 
 ## 📖 專案簡介
 
-🔎 ASD 的用途很直接：先把長文檔整理成「可定位、可分段、可引用」的結構化檔案，再用同一套結構做問答與審計。概念參考自 **Claud Agent Skill** 🙏 ，將之轉化為長文/多檔的 SSOT 內容應用，提高答題命中率。
+🔎 ASD 的用途很直接：先把長文檔整理成「可定位、可分段、可引用」的結構化檔案，再用同一套結構做問答與審計，提高答題命中率。
 
 本專案由兩個 System Prompt 組成，建議按次序使用：
 
