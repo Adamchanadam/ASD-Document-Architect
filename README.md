@@ -9,7 +9,7 @@
 ![ASD overview - Gemini POV](what_is_it/ASD_overview_Gemini_POV_v1.png)
 
 
-
+> 🔎 ASD Document Architect + ASD Decoder 是一套「長文檔 → 模組化 SSOT → 可追溯問答」的工程化方法：先把原文封裝成可路由的模組（ASD-SSOT），再由 Decoder 依 Master Index 進行檢索／引用／作答，並偏向 Fail-Closed（答不到則明示）。
 
 ---
 ### 🌟 立即體驗（Gemini DEMO）
