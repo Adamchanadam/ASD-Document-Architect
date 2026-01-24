@@ -169,7 +169,8 @@ ASD 系統可以用兩種方式運作，差別在於「便利」與「可控性�
 🔎 以下為一次實測的流程摘要，用於說明 ASD 在「超長 PDF + 非連續頁碼 + 工具截斷」情境下的可行運作方式︰
 
 - 📍 輸入：200+ 頁 PDF；選取非連續的多段頁碼範圍 (🗂️領展房產基金（823） 2024 年報 :  [Sample_823_2024_Annual_Report_Financial_Statements.pdf](./sample_doc/Sample_823_2024_Annual_Report_Financial_Statements.pdf))
-- 📍 執行：按 MODE A 自動物理分拆（每檔約 1,000 行量級），可人工 copy-paste 合併為單一 Markdown  [Sample_823_2024_Annual_Report_Financial_Statements_ASD.md](./sample_doc/Sample_823_2024_Annual_Report_Financial_Statements_ASD.md)
+- 📍 AI 先掃 PDF 目錄，列出章節範圍供你選取
+- 📍 設定好自選提取章節的範圍，執行：按 MODE A 自動物理分拆（每檔約 1,000 行量級），可人工 copy-paste 合併為單一 Markdown  [Sample_823_2024_Annual_Report_Financial_Statements_ASD.md](./sample_doc/Sample_823_2024_Annual_Report_Financial_Statements_ASD.md)
 - 📍 途中：曾出現工具截斷（Tool Truncation），依指令轉入 Text-Paste 分批補齊後完成封裝
 - 📍 後續：按 MODE B 提取各模塊 Trigger Context 與 Entity Inventory，生成 Master Knowledge Index [Sample_823_Master_ASD_Index.md](./sample_doc/Sample_823_Master_ASD_Index.md)
 - 📍 Decoder 提問答案：[Sample_823_Decoder_Question_Answer.md](./sample_doc/Sample_823_Decoder_Question_Answer.md)
