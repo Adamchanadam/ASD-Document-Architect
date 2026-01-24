@@ -9,7 +9,7 @@
 ![ASD overview - Gemini POV](what_is_it/ASD_overview_Gemini_POV_v1.png)
 
 
-> 🔎 ASD Document Architect + ASD Decoder 是一套「長文檔 → 模組化 SSOT → 可追溯問答」的工程化方法：先把原文封裝成可路由的模組（ASD-SSOT），再由 Decoder 依 Master Index 進行檢索／引用／作答，並偏向 Fail-Closed（答不到則明示）。
+> 🔎 ASD Document Architect + ASD Decoder 是一套「長文檔 → 模組化 SSOT → 可追溯問答」的工程化方法：先把原文整理成可依索引精準定位、可分流調用的模組（ASD-SSOT），再由 ASD Decoder 依 Master Index 進行檢索／引用／作答，並偏向 Fail-Closed（答不到則明示）。
 
 ---
 ### 🌟 立即體驗（Gemini DEMO）
@@ -145,22 +145,21 @@ ASD 系統可以用兩種方式運作，差別在於「便利」與「可控性�
 ### 2. Step A — 生成 ASD-SSOT（用 Architect 封裝原文）
 1. 在任一 LLM 平台開啟 **New Chat**（建議使用獨立對話，避免混入其他上下文）。
 2. 貼上 [prompt_ASD_Document_Architect.md](./prompt_ASD_Document_Architect.md) 全文並發送。
-3. 上傳原文檔案，按 Architect 提示執行：
-   * **MODE A（封裝原始長文）**：輸出單檔或多卷 Part（依容量與平台限制自動處理）。
-   * **MODE B（建立 Master Knowledge Index）**：在已保存多份 ASD-SSOT 後，用檔名清單與必要輸入建立可跳轉的總索引；若缺必要輸入將直接中止（Fail-Closed）。
-4. 將輸出保存為 `*_ASD-SSOT.md`；如為物理分拆，保存為多個 `_PartN.md` 檔案；MODE B 的輸出另存為獨立索引檔。
+3. 上傳原文檔案 (SSOT)，按 Architect 提示執行：
+   * **MODE A（封裝原始長文）**：如果是 PDF ， AI 會先掃瞄目錄章節並詢問要處理的範圍，然後輸出單檔或多卷 (Part)（依容量與平台限制自動處理），直至完成多 Part 的內容轉換，完成後，做 MODE B 。
+   * **MODE B（建立 Master Knowledge Index）**：在已保存多份 ASD-SSOT 後，要求 AI 「執行 MODE B ，製作 Master Index 」， AI 會自動讀取所有 ASD-SSOT 檔案，並建立可跳轉的總索引，最後輸出 Master Knowledge Index (.MD) 檔案。
+4. 將輸出保存為 `*_ASD-SSOT.md`；如為物理分拆，保存為多個 `_PartN.md` 檔案；MODE B 的輸出另存為獨立索引檔 `*_Master_Index.md`。
 
 ### 3. Step B — 以 Decoder 問答（先索引、後跳轉、再引用）
 1. 另開一個 **New Chat**（建議與 Architect 分開，確保解碼器只以 ASD-SSOT 為唯一資料源）。
 2. 貼上 [prompt_ASD_Decoder.md](./prompt_ASD_Decoder.md) 全文並發送。
-3. 提供剛生成的 ASD-SSOT：
+3. 提供剛生成的 ASD-SSOT 和 Master Knowledge Index：
    * 若是分拆檔：先提供 Part 1，按需要再依序提供 Part 2、Part 3……
    * 若同時提供多個 ASD 檔案：Decoder 會先分別建路由表，再合併候選模組後逐一跳轉。
-   * 如同時提供 Master Knowledge Index：仍必須一併提供索引中引用到的對應 ASD 檔案/分卷；否則 Decoder 會中止並要求補檔（Fail-Closed）。
 4. 提出問題；Decoder 會：
    * 先掃描 `> META-INDEX:`（並合併 `> META-INDEX UPDATE:`）
    * 再以 `## [MODULE X]` 精準跳轉
-   * 最後只用命中模組的 `[Data Payload]` 回答，並附上 `[Source: PDF_Index P.(實際值或 N/A)]` 引用；如需審計/回測，會額外輸出 `AUDIT_EVIDENCE_PACK`（Evidence ID 對照每條主張的可回查片段）
+   * 最後只用命中模組的 `[Data Payload]` 回答，並附上 `[Source: PDF_Index P.(實際值或 N/A)]` 引用；如需審計/回測，會額外輸出 `AUDIT_EVIDENCE_PACK`（Evidence ID 對照每條主張的可回查片段片 ; 可按實際需要，用 Prompt 向 AI 指示要不要輸出 `AUDIT_EVIDENCE_PACK`)
 
 ---
 
@@ -285,6 +284,17 @@ source_file: example.pdf
 
 ---
 
+## 🤔 最適合用 ASD 的任務： 
+
+1. **對外發布**：新聞稿、官網聲明、對外簡報、對外 FAQ
+2. **合約／法規／合規**：條款解讀、政策依據、審核清單、風險聲明
+3. **財務與數字**：報價、成本/毛利模型、KPI、預算、募資數據口徑
+4. **高風險決策材料**：管理層/董事會/投委會用的決策 memo
+5. **需要被審核的報告**：研究報告、審計報告、評估報告（要留證）
+6. **跨部門對齊的 SSOT**：需求規格、會議決議與行動項追蹤（避免口徑漂移）
+7. **「不可編造」的資料抽取**：從長文檔抽日期/人名/金額/條件，逐條對應原文
+
+---
 ## 🧾 術語速讀（新手友善）
 
 - **ASD-SSOT**：由 ASD Architect 產出的結構化文檔，包含索引與多個模塊，便於定位與引用。
