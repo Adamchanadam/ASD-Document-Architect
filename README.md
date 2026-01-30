@@ -1,7 +1,8 @@
 # ASD 智能文檔架構師 (ASD Document Architect)
 
 > **Agent-Skill Driven Single Source of Truth (ASD-SSOT)**
-> 專為 LLM 長文本檢索設計的高效、低幻覺風險、結構化封裝系統。
+> 把長文（PDF/Word/Markdown）整理成「有索引、可跳轉、可引用」的模組化文件：先用索引定位相關模組，再按原文精準引用作答；如原文找不到答案會明示「答不到／超出範圍」。
+
 
 ![Version](https://img.shields.io/badge/Version-v1.7.2-blue.svg) ![Language](https://img.shields.io/badge/Language-Traditional%20Chinese-green.svg) ![License](https://img.shields.io/badge/License-MIT-orange.svg)
 
@@ -15,7 +16,7 @@
 ### 🌟 立即體驗（Gemini DEMO）
 如需最快體驗，可直接使用以下 Gemini Gems（可能需要登入 Google 帳戶）：
 
-![Gemini-GEM-ASD-Architech](./what_is_it/gemini_gem_architech_ui.png)
+![Gemini-GEM-ASD-Architect](./what_is_it/gemini_gem_architect_ui.png)
 - 📜 **ASD 智能文檔架構師 (ASD Document Architect)**：https://gemini.google.com/gem/1Us9GWj3H4nYNvbd_2drZUMqfuJni_8MK?usp=sharing
 
 
@@ -26,28 +27,39 @@
 
 ## 📖 專案簡介
 
-🔎 ASD 的用途很直接：先把長文檔整理成「可定位、可分段、可引用」的結構化檔案，再用同一套結構做問答與審計，提高答題命中率。
+🔎 ASD 的用途很直接：先把長文檔整理成「可定位、可分段、可引用」的結構化檔案，再用同一套結構做問答與審計，降低誤讀、漏讀與引用漂移的風險，並把核對成本壓到可控範圍。
 
 本專案由兩個 System Prompt 組成，建議按次序使用：
 
 1) **`prompt_ASD_Document_Architect.md`（Architect｜封裝器）**  
 把原始長文檔（PDF / Markdown / Word）封裝為附帶索引(路由)的 **ASD-SSOT**，特點：  
-- 🌟 Mode A : 將大型 PDF , 多個 Markdown 檔交給 AI 轉換成 ASD 格式，輸出有導航的  Markdown
-- **內容封裝而非摘要**：以「原文零改寫、零刪減」為設計目標
-- 自動生成附帶索引(路由)的 `> META-INDEX:` 與模組化 `## [MODULE X]`  
-- 在內容超出單次輸出上限時，自動多卷分拆（Part 1 / Part N）物理分拆與增量索引更新  
-- 若 AI 讀取受限或工具截斷時，可轉入 Text-Paste 分批處理
-- 🌟 Mode B : 將多個 ASD Markdown 交將 AI ，生成 Master Index 索引，將方便下游 AI 準確讀取內容：
+- **MODE A（封裝原始長文）**：把大型 PDF／多個 Markdown／Word 整理成 ASD-SSOT（含索引與模組），必要時會自動分拆成多個 Part 以避免輸出截斷
+- **內容封裝而非摘要（設計目標）**：以「盡量不改寫、不刪減」為原則；實際效果仍會受平台讀取權限、工具截斷、OCR 品質等因素影響
+- 自動生成索引 `> META-INDEX:` 與模組化錨點 `## [MODULE X]`，方便後續精準跳轉與引用
+- 內容超出單次輸出上限時，自動多卷分拆（Part 1 / Part N），並以增量方式更新索引
+- 如遇平台讀取受限或工具截斷，可切換 Text-Paste 分批補齊
+- **MODE B（建立 Master Knowledge Index）**：在已有多份 ASD-SSOT 後，彙總模組定位資訊生成一份總索引（MKI），方便下游 Decoder 路由到正確模組
 
 
-2) **`prompt_ASD Decoder.md`（Decoder｜解碼器）**  
-用於精準的問答與檢索：先讀索引、精準跳轉命中模組、只用命中模組的 `[Data Payload]`內容回答，並附上 **PDF_Index** 頁碼引用（Fail-Closed）。如需審計/回測，可額外輸出 `AUDIT_EVIDENCE_PACK`（逐條主張綁定 Evidence ID、來源檔與可回查片段）。
+2) **`prompt_ASD_Decoder.md`（Decoder｜解碼器）**  
+用於精準的問答與檢索：先讀索引、跳轉命中模組、只用命中模組的 `[Data Payload]` 內容回答；在可得時附上 **PDF_Index** 頁碼引用（不可得則填 `N/A`）。如需審計/回測，可額外輸出 `AUDIT_EVIDENCE_PACK`（逐條主張綁定 Evidence ID、來源檔與可回查片段），把核對路徑固定化。
 
 **ASD 的核心目標是降低 LLM 處理長文檔常見風險：**
 - 把長文閱讀改成「先看索引，再只讀相關段落」，減少一次要處理的內容量，從而降低漏讀與跳步機率。  
 - 檢索迷失（Lost-in-the-middle）  
 - 內容幻覺（憑印象補全、引用漂移、頁碼亂填）
 
+### 🔎 實測摘要（Balanced benchmark）
+- **Architect**：結構合規率 90.0%；原文覆蓋率 99.4%；穩定性相似度 82.9%（hash 不匹配，差異主要應收斂到 metadata 區）
+- **Decoder**：最佳整體通過率 `decoder_gen_asd` 為 83.3%；EvidenceValidRate 約 90.7%（Reference ASD）/ 92.6%（Generated ASD）；AbstainAccuracy 94.4% / 98.1%
+- **仍待補齊**：Facet coverage / balanced metrics（受 Task 7 ID 與 facet pipeline 影響，需修正後重跑）
+
+### 📄 研究報告：ASD Architect + ASD Decoder 成效實測 (Benchmark Report : 2026-01-27)
+如需查看完整測試報告（含重點圖表、NotebookLM slide PDF 連結、以及完整研究報告正文：研究設計/指標定義/結果分析），請打開：
+
+![ASD_Research_Report_Scorecard_2026_01_27_page_001.jpg](bencharmk_supplementary_materials/ASD_Research_Report_Scorecard_2026_01_27_pages/ASD_Research_Report_Scorecard_2026_01_27_page_001.jpg)
+
+[ASD_Benchmark_Report.md](./ASD_Benchmark_Report.md)
 
 ----
 
@@ -63,7 +75,7 @@
 
 
 >
-> ### 1) 為何 `Master_Index.md` 對我很重要？
+> ### 1) 為何「Master Knowledge Index（MKI）」對我很重要？
 > 它就像一個「意圖導航儀（Intent Router）」。  
 > - **機制**：大型語言模型在面對超長文本時，常見風險是「檢索迷航」——即使資料在文件某處，也可能因為上下文過大而失焦。  
 > - **實務影響**：當使用者提出問題時，我可以先用索引把自然語言意圖映射到對應模塊與檔案/分卷，然後再跳轉讀取。這會把工作方式由「廣泛翻找」轉為「精準定位」，降低誤命中與胡亂補全的機率。  
@@ -136,7 +148,7 @@ ASD 系統可以用兩種方式運作，差別在於「便利」與「可控性�
 🔎 最簡單的理解方式：先用 Architect 把「長文」變成「可定位的結構化檔案」，再用 Decoder 以「索引 → 跳轉 → 引用」方式問答。
 
 ### 1. 準備（一次性）
-本工具無需安裝代碼庫；只需兩份 Prompt 與一份原文：
+本工具無需安裝代碼庫；只需兩份提示詞（Prompt）與一份原文：
 1. 於本倉庫根目錄複製以下兩個檔案全文：
    * [prompt_ASD_Document_Architect.md](./prompt_ASD_Document_Architect.md)（封裝器／Architect）
    * [prompt_ASD_Decoder.md](./prompt_ASD_Decoder.md)（解碼器／Decoder）
@@ -159,7 +171,7 @@ ASD 系統可以用兩種方式運作，差別在於「便利」與「可控性�
 4. 提出問題；Decoder 會：
    * 先掃描 `> META-INDEX:`（並合併 `> META-INDEX UPDATE:`）
    * 再以 `## [MODULE X]` 精準跳轉
-   * 最後只用命中模組的 `[Data Payload]` 回答，並附上 `[Source: PDF_Index P.(實際值或 N/A)]` 引用；如需審計/回測，會額外輸出 `AUDIT_EVIDENCE_PACK`（Evidence ID 對照每條主張的可回查片段片 ; 可按實際需要，用 Prompt 向 AI 指示要不要輸出 `AUDIT_EVIDENCE_PACK`)
+   * 最後只用命中模組的 `[Data Payload]` 回答，並附上 `[Source: PDF_Index P.(實際值或 N/A)]` 引用；如需審計/回測，會額外輸出 `AUDIT_EVIDENCE_PACK`（Evidence ID 對照每條主張的可回查片段；可按實際需要，用 Prompt 向 AI 指示是否輸出 `AUDIT_EVIDENCE_PACK`）
 
 ---
 
